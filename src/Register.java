@@ -10,9 +10,9 @@
  */
 public class Register {
 
-    Class<?> mType ; 
-    int mIValue;
-    double mFValue;
+    private Class<?> mType ; 
+    private int mIValue;
+    private double mFValue;
 
     public Register() {
         mIValue = 0;
@@ -26,9 +26,9 @@ public class Register {
 
    public void setValue(Object o) throws IllegalStateException {
        if(o.getClass().equals(Integer.class)){
-           mIValue = (int)o;
+           mIValue = (int)o & 0xFFFFFF;
        }else if(o.getClass().equals(double.class)){
-           mFValue = (double)o;
+           mFValue = (double)o;// & 0xFFFFFF;
        }else{
            throw new IllegalStateException();
        }

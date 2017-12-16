@@ -19,16 +19,48 @@ public class Memory {
     }
 
     public int getByte(int addr) {
-        System.out.println("Getting byte: "+ field[addr]);
-        return (int) field[addr];
+        System.out.println("Getting byte: " + field[addr]);
+        return (int) field[addr] & 0xFF;
     }
 
-    public void setByte(int addr, int val) throws IllegalAccessException {
-        if (addr < 0 || addr >= field.length) {
-            throw new IllegalAccessException();
+    public int getByte(int addr, int niFlag) {
+        switch (niFlag) {
+            case 1:
+                return addr & 0xFF;
+            case 2:
+                return getByte(getWord(addr)) & 0xFF;
+            case 3:
+                return getByte(addr) & 0xFF;
+            default:
+                System.out.println("Error parsing ni in memory");
+                return -1;
         }
-        field[addr] = (byte) val;
+    }
+
+    public void setByte(int addr, int val) {
+        if (addr < 0 || addr >= field.length) {
+            System.out.println("Address out of range!");
+            return;
+        }
+        field[addr] = (byte) (val & 0xFF);
         System.out.println("Setting byte: " + Integer.toHexString((byte) val));
+    }
+
+    public void setByte(int addr, int value, int niFlag) {
+        switch (niFlag) {
+            case 1:
+                System.out.println("Seting value to direct value?");
+                return;
+            case 2:
+                addr = getWord(addr);
+                break;
+            case 3:
+                addr = addr;
+                break;
+            default:
+                System.out.println("Error parsing ni in memory");
+        }
+        setByte(addr, value);
     }
 
     public int getWord(int addr) {
@@ -38,9 +70,25 @@ public class Memory {
         return wrap.getInt();
     }
 
-    public void setWord(int addr, int value) throws IllegalAccessException {
+    public int getWord(int addr, int niFlag) {
+        switch (niFlag) {
+            case 1:
+                return addr;
+            case 2:
+                return getWord(getWord(addr));
+            case 3:
+                return getWord(addr);
+            default:
+                System.out.println("Error parsing ni in memory");
+                return -1;
+        }
+    }
+
+    public void setWord(int addr, int value) {
+        value = value & 0xFFFFFF;
         if (addr < 0 || addr >= field.length - 3) {
-            throw new IllegalAccessException();
+            System.out.println("Address out of range!");
+            return;
         }
         byte[] inp = ByteBuffer.allocate(3).putInt(value).array();
         field[addr] = inp[0];
@@ -48,7 +96,23 @@ public class Memory {
         field[addr + 2] = inp[2];
         System.out.println("Setting word: " + inp.toString()); //https://stackoverflow.com/questions/31750160/get-unsigned-integer-from-byte-array-in-java
     }
-    
+
+    public void setWord(int addr, int value, int niFlag) {
+        switch (niFlag) {
+            case 1:
+                System.out.println("Seting value to direct value?");
+                return;
+            case 2:
+                addr = getWord(addr);
+                break;
+            case 3:
+                addr = addr;
+                break;
+            default:
+                System.out.println("Error parsing ni in memory");
+        }
+        setWord(addr, value);
+    }
+
     //TODO:float
-    
 }

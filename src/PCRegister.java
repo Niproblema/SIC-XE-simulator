@@ -17,6 +17,14 @@ public class PCRegister extends Register {
     public PCRegister(int n) {
         super(n);
     }
+    
+    public void increment(){
+        setValue(getValue().intValue()+1);
+    }
+    public void increment(int k){
+        setValue(getValue().intValue()+k);
+    }
+    
 
     //PCRegister specific methods
 }
