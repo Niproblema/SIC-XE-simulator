@@ -1,5 +1,7 @@
 
 import java.awt.Color;
+import java.io.File;
+import javax.swing.JFileChooser;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -9,15 +11,21 @@ import java.awt.Color;
 /**
  *
  * @author jan
+ * Also available on https://github.com/Niproblema/SIC-XE-simulator
  */
 public class SimForm extends javax.swing.JFrame {
+
+    Machine ms;
+    boolean isRunning = false;
+    String mFilePath = null;
 
     /**
      * Creates new form SimForm
      */
     public SimForm() {
         initComponents();
-        Machine ms;
+        ms = new Machine();
+        ms.refreshingForm = this;
 //        MessageConsole mc = new MessageConsole(jTextArea_Console);
 //        mc.setMessageLines(100);
 //        mc.redirectErr(Color.RED, System.err);
@@ -160,21 +168,51 @@ public class SimForm extends javax.swing.JFrame {
 
         jButton_Start.setText("Start");
         jButton_Start.setPreferredSize(new java.awt.Dimension(70, 30));
+        jButton_Start.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_StartActionPerformed(evt);
+            }
+        });
 
         jButton_Stop.setText("Stop");
         jButton_Stop.setPreferredSize(new java.awt.Dimension(70, 30));
+        jButton_Stop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_StopActionPerformed(evt);
+            }
+        });
 
         jButton_Step.setText("Step");
         jButton_Step.setPreferredSize(new java.awt.Dimension(70, 30));
+        jButton_Step.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_StepActionPerformed(evt);
+            }
+        });
 
         jButton1_LoadObj.setText("Load obj");
+        jButton1_LoadObj.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1_LoadObjActionPerformed(evt);
+            }
+        });
 
         jLabel_FileLoaded.setText("none");
         jLabel_FileLoaded.setAutoscrolls(true);
 
-        jButton_Reset_Reg.setText("Reset Mem");
+        jButton_Reset_Reg.setText("Reset");
+        jButton_Reset_Reg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton_Reset_RegActionPerformed(evt);
+            }
+        });
 
         jButton2_Reload.setText("Reload obj");
+        jButton2_Reload.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2_ReloadActionPerformed(evt);
+            }
+        });
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Jan Aleksandrov, 63140001");
@@ -189,8 +227,8 @@ public class SimForm extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jButton1_LoadObj, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jButton_Reset_Reg, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE))
+                            .addComponent(jButton1_LoadObj, javax.swing.GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
+                            .addComponent(jButton_Reset_Reg, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel_FileLoaded, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -200,51 +238,50 @@ public class SimForm extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_RegA)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegA, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(Lab_RegS)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegS, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_RegX)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegX, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(Lab_RegT)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegT, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_RegB)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegB, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_RegPC)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegPC, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_RegL)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegL, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                    .addComponent(Lab_RegF)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_RegF, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(Lab_CLK)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(TxF_CLK, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(jButton_Start, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jButton_Stop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(jButton_Step, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_RegA)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegA, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(Lab_RegS)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegS, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_RegX)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegX, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(Lab_RegT)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegT, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_RegB)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegB, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_RegPC)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegPC, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_RegL)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegL, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(Lab_RegF)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_RegF, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(Lab_CLK)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TxF_CLK, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(jButton_Start, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton_Stop, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton_Step, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.LEADING))
                         .addGap(0, 18, Short.MAX_VALUE))
-                    .addComponent(jSeparator3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSeparator2))
@@ -304,47 +341,90 @@ public class SimForm extends javax.swing.JFrame {
                         .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void TxF_RegAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegAActionPerformed
-
+        System.out.println(Integer.toString(Integer.parseInt(TxF_RegA.getText())));
+        ms.A.setValue(Integer.parseInt(TxF_RegA.getText()));
+        System.out.println(Integer.toString(ms.A.getValue().intValue()));
     }//GEN-LAST:event_TxF_RegAActionPerformed
 
     private void TxF_RegXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegXActionPerformed
-        // TODO add your handling code here:
+        ms.X.setValue(Integer.parseInt(TxF_RegX.getText()));
     }//GEN-LAST:event_TxF_RegXActionPerformed
 
     private void TxF_RegLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegLActionPerformed
-        // TODO add your handling code here:
+        ms.L.setValue(Integer.parseInt(TxF_RegL.getText()));
     }//GEN-LAST:event_TxF_RegLActionPerformed
 
     private void TxF_RegBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegBActionPerformed
-        // TODO add your handling code here:
+        ms.B.setValue(Integer.parseInt(TxF_RegB.getText()));
     }//GEN-LAST:event_TxF_RegBActionPerformed
 
     private void TxF_RegSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegSActionPerformed
-        // TODO add your handling code here:
+        ms.S.setValue(Integer.parseInt(TxF_RegS.getText()));
     }//GEN-LAST:event_TxF_RegSActionPerformed
 
     private void TxF_RegTActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegTActionPerformed
-        // TODO add your handling code here:
+        ms.T.setValue(Integer.parseInt(TxF_RegT.getText()));
     }//GEN-LAST:event_TxF_RegTActionPerformed
 
     private void TxF_RegFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegFActionPerformed
-        // TODO add your handling code here:
+        ms.F.setValue(Double.parseDouble(TxF_RegF.getText()));
     }//GEN-LAST:event_TxF_RegFActionPerformed
 
     private void TxF_RegPCActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegPCActionPerformed
-        // TODO add your handling code here:
+        ms.PC.setValue(Integer.parseInt(TxF_RegPC.getText()));
     }//GEN-LAST:event_TxF_RegPCActionPerformed
 
     private void TxF_CLKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_CLKActionPerformed
-        // TODO add your handling code here:
+        ms.setSpeed(Integer.parseInt(TxF_CLK.getText()));
     }//GEN-LAST:event_TxF_CLKActionPerformed
+
+    private void jButton_Reset_RegActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_Reset_RegActionPerformed
+        ms.resetRegisters();
+        ms.resetMemory();
+        this.refresh();
+    }//GEN-LAST:event_jButton_Reset_RegActionPerformed
+
+    private void jButton_StartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_StartActionPerformed
+        if (!isRunning) {
+            ms.start();
+            isRunning = true;
+        }
+    }//GEN-LAST:event_jButton_StartActionPerformed
+
+    private void jButton_StopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_StopActionPerformed
+        ms.stop();
+        isRunning = false;
+    }//GEN-LAST:event_jButton_StopActionPerformed
+
+    private void jButton_StepActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton_StepActionPerformed
+        if (!isRunning) {
+            ms.start(1);
+        }
+    }//GEN-LAST:event_jButton_StepActionPerformed
+
+    private void jButton2_ReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2_ReloadActionPerformed
+        if (mFilePath != null) {
+            Loader.loadObjFile(ms, mFilePath);
+        }
+    }//GEN-LAST:event_jButton2_ReloadActionPerformed
+
+    private void jButton1_LoadObjActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1_LoadObjActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            mFilePath = fileChooser.getSelectedFile().getAbsolutePath();
+            Loader.loadObjFile(ms, mFilePath);
+            jLabel_FileLoaded.setText(fileChooser.getSelectedFile().getName());
+        }
+    }//GEN-LAST:event_jButton1_LoadObjActionPerformed
 
     /**
      * @param args the command line arguments
@@ -379,6 +459,19 @@ public class SimForm extends javax.swing.JFrame {
                 new SimForm().setVisible(true);
             }
         });
+    }
+
+    public void refresh() {
+        TxF_CLK.setText(Integer.toString(ms.getSpeed()));
+        TxF_RegA.setText(Integer.toString(ms.A.getValue().intValue()));
+        TxF_RegB.setText(Integer.toString(ms.B.getValue().intValue()));
+        TxF_RegF.setText(Double.toString(ms.F.getValue().doubleValue()));
+        TxF_RegL.setText(Integer.toString(ms.L.getValue().intValue()));
+        TxF_RegPC.setText(Integer.toString(ms.PC.getValue().intValue()));
+        TxF_RegS.setText(Integer.toString(ms.S.getValue().intValue()));
+        TxF_RegT.setText(Integer.toString(ms.T.getValue().intValue()));
+        TxF_RegX.setText(Integer.toString(ms.X.getValue().intValue()));
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
