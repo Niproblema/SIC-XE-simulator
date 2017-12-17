@@ -115,7 +115,7 @@ public class Machine {
 
     public void start(final int n) {
         mKeepRunning = true;
-        final int mEndStep = mStep+n;
+        final int mEndStep = mStep + n;
         Thread th = new Thread("Sic/XE simulation") {
             public void run() {
                 for (; (mStep != mEndStep) && mKeepRunning; mStep++) {
@@ -166,7 +166,7 @@ public class Machine {
             return;
         }
         invalidAddressing();
-        System.out.println(Integer.toHexString(opcode) + " "+ Integer.toHexString(operand));
+        System.out.println(Integer.toHexString(opcode) + " " + Integer.toHexString(operand));
     }
 
     private boolean execF1(int op) {
@@ -243,7 +243,7 @@ public class Machine {
                 one = r1.getValue().intValue();
                 two = r2.getValue().intValue();
                 r2.setValue(one);
-                r1.setValue(two);
+                //r1.setValue(two);
                 break;
             case Opcode.SHIFTL:
                 r1 = getReg(ops[0]);
@@ -297,7 +297,7 @@ public class Machine {
         int x = (B2 >> 7) & 1;
         if (ni == 0) {
             int B3 = fetch();
-            int address = ((B2 & 128) << 8) + B3;
+            int address = ((B2 & 255) << 8) + B3;
 
             switch (op) {
                 case Opcode.ADD:
@@ -313,29 +313,29 @@ public class Machine {
                     A.setValue((int) (x == 0 ? A.getValue().intValue() / mem.getWord(address) : A.getValue().intValue() / mem.getWord(address + X.getValue().intValue())));
                     break;
                 case Opcode.J:
-                    PC.setValue((int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue())));
+                    PC.setValue((int) (x == 0 ? address : address + X.getValue().intValue()));
 
                     break;
                 case Opcode.JEQ:
                     if (SW.getValue().intValue() == 0) {
-                        PC.setValue((int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue())));
+                        PC.setValue((int) (x == 0 ? address : address + X.getValue().intValue()));
                     }
                     break;
                 case Opcode.JGT:
                     if (SW.getValue().intValue() > 0) {
-                        PC.setValue((int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue())));
+                        PC.setValue((int) (x == 0 ? address : address + X.getValue().intValue()));
                     }
 
                     break;
                 case Opcode.JLT:
                     if (SW.getValue().intValue() < 0) {
-                        PC.setValue((int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue())));
+                        PC.setValue((int) (x == 0 ? address : address + X.getValue().intValue()));
                     }
 
                     break;
                 case Opcode.JSUB:
                     L.setValue(PC.getValue().intValue());
-                    PC.setValue((int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue())));
+                    PC.setValue((int) (x == 0 ? address : address + X.getValue().intValue()));
 
                     break;
                 case Opcode.LDA:
@@ -364,7 +364,7 @@ public class Machine {
 
                     break;
                 case Opcode.RD:
-                    int dev = (int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue()));
+                    int dev = (int) (x == 0 ? mem.getByte(address) : mem.getByte(address + X.getValue().intValue()));
                     Device d = getDevice(dev);
                     A.setValue(((A.getValue().intValue() >> 8) << 8) + d.readDevice() & 0xFF);
                     break;
@@ -394,7 +394,7 @@ public class Machine {
 
                     break;
                 case Opcode.TD:
-                    int devI = (int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue()));
+                    int devI = (int) (x == 0 ? mem.getByte(address) : mem.getByte(address + X.getValue().intValue()));
                     Device dd = getDevice(devI);
                     SW.setValue(dd.test() ? 1 : 0);
                     break;
@@ -404,7 +404,7 @@ public class Machine {
 
                     break;
                 case Opcode.WD:
-                    int devic = (int) (x == 0 ? mem.getWord(address) : mem.getWord(address + X.getValue().intValue()));
+                    int devic = (int) (x == 0 ? mem.getByte(address) : mem.getByte(address + X.getValue().intValue()));
                     Device ddd = getDevice(devic);
                     ddd.writeDevice((byte) (A.getValue().intValue() & 0xFF));
                     break;
@@ -418,7 +418,7 @@ public class Machine {
             int p = (B2 >> 5) & 1;
             int e = (B2 >> 4) & 1;
             int B3 = fetch();
-            int address = ((B2 & 16) << 8) + B3;
+            int address = ((B2 & 0xF) << 8) + B3;
             if (e == 1) {
                 int B4 = fetch();
                 address = (address << 8) + B4;
@@ -430,11 +430,12 @@ public class Machine {
                 System.out.println("Invalid instruction, wrong b or p bits.");
                 return false;
             }
+            if (p == 1) {
+                address = (address & 0x800) >> 11 == 1 ? address - 4096 : address;
+                address = PC.getValue().intValue() + address;
+            }
             if (b == 1) {
                 address += B.getValue().intValue();
-            }
-            if (p == 1) {
-                address = PC.getValue().intValue() + address;
             }
 
             switch (op) {
@@ -460,24 +461,49 @@ public class Machine {
                     F.setValue((double) (F.getValue().doubleValue() / mem.getWord(address, ni)));
                     break;
                 case Opcode.J:
+                    if (ni == 3) {
+                        ni = 1;
+                    } else if (ni == 2) {
+                        ni = 3;
+                    }
                     PC.setValue(mem.getWord(address, ni));
                     break;
                 case Opcode.JEQ:
+                    if (ni == 3) {
+                        ni = 1;
+                    } else if (ni == 2) {
+                        ni = 3;
+                    }
                     if (SW.getValue().intValue() == 0) {
                         PC.setValue(mem.getWord(address, ni));
                     }
                     break;
                 case Opcode.JGT:
+                    if (ni == 3) {
+                        ni = 1;
+                    } else if (ni == 2) {
+                        ni = 3;
+                    }
                     if (SW.getValue().intValue() > 0) {
-                       PC.setValue(mem.getWord(address, ni));
+                        PC.setValue(mem.getWord(address, ni));
                     }
                     break;
                 case Opcode.JLT:
+                    if (ni == 3) {
+                        ni = 1;
+                    } else if (ni == 2) {
+                        ni = 3;
+                    }
                     if (SW.getValue().intValue() < 0) {
                         PC.setValue(mem.getWord(address, ni));
                     }
                     break;
                 case Opcode.JSUB:
+                    if (ni == 3) {
+                        ni = 1;
+                    } else if (ni == 2) {
+                        ni = 3;
+                    }
                     L.setValue(PC.getValue().intValue());
                     PC.setValue(mem.getWord(address, ni));
                     break;
@@ -488,7 +514,7 @@ public class Machine {
                     B.setValue(mem.getWord(address, ni));
                     break;
                 case Opcode.LDCH:
-                    A.setValue(((A.getValue().intValue() >> 8) << 8) + mem.getWord(address, ni) & 256);
+                    A.setValue(A.getValue().intValue() & 0xFFFF00 | mem.getByte(address, ni) & 0xFF);
                     break;
                 case Opcode.LDF:
                     F.setValue(mem.getWord(address, ni));
@@ -518,7 +544,7 @@ public class Machine {
                     A.setValue((int) (A.getValue().intValue() | mem.getWord(address, ni)));
                     break;
                 case Opcode.RD:
-                    Device d = getDevice(mem.getWord(address, ni));
+                    Device d = getDevice(mem.getByte(address, ni));
                     A.setValue(((A.getValue().intValue() >> 8) << 8) + d.readDevice() & 0xFF);
                     break;
                 case Opcode.RSUB:
@@ -534,7 +560,7 @@ public class Machine {
                     mem.setWord(address, B.getValue().intValue(), ni);
                     break;
                 case Opcode.STCH:
-                    mem.setByte(mem.getWord(address, ni) + 2, A.getValue().intValue() & 0xFF);
+                    mem.setByte(address, A.getValue().intValue() & 0xFF, ni);
                     break;
                 case Opcode.STF:
                     //mem.setWord(address, F.getValue().doubleValue(), ni);
@@ -566,15 +592,15 @@ public class Machine {
                     F.setValue((double) (F.getValue().doubleValue() - mem.getWord(address, ni)));
                     break;
                 case Opcode.TD:
-                    Device dd = getDevice(mem.getWord(address, ni));
+                    Device dd = getDevice(mem.getByte(address, ni));
                     SW.setValue(dd.test() ? 1 : 0);
                     break;
                 case Opcode.TIX:
-                    T.setValue(T.getValue().intValue() + 1);
-                    SW.setValue((int) (T.getValue().intValue() - mem.getWord(address, ni)));
+                    X.setValue(X.getValue().intValue() + 1);
+                    SW.setValue((int) (X.getValue().intValue() - mem.getWord(address, ni)));
                     break;
                 case Opcode.WD:
-                    Device ddd = getDevice(mem.getWord(address, ni));
+                    Device ddd = getDevice(mem.getByte(address, ni));
                     ddd.writeDevice((byte) (A.getValue().intValue() & 0xFF));
                     break;
                 default:

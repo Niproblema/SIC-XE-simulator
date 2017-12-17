@@ -348,9 +348,7 @@ public class SimForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void TxF_RegAActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegAActionPerformed
-        System.out.println(Integer.toString(Integer.parseInt(TxF_RegA.getText())));
         ms.A.setValue(Integer.parseInt(TxF_RegA.getText()));
-        System.out.println(Integer.toString(ms.A.getValue().intValue()));
     }//GEN-LAST:event_TxF_RegAActionPerformed
 
     private void TxF_RegXActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TxF_RegXActionPerformed

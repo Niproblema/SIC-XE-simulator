@@ -26,8 +26,8 @@ public class Register {
 
    public void setValue(Object o) throws IllegalStateException {
        if(o.getClass().equals(Integer.class)){
-           mIValue = (int)o & 0xFFFFFF;
-       }else if(o.getClass().equals(double.class)){
+           mIValue = (int)o;// & 0xFFFFFF;
+       }else if(o.getClass().equals(Double.class) || o.getClass().equals(Float.class)){
            mFValue = (double)o;// & 0xFFFFFF;
        }else{
            throw new IllegalStateException();

@@ -10,7 +10,7 @@ import java.io.Reader;
  */
 /**
  *
- * @author jan, povzeto od https://github.com/jurem/SicTools
+ * @author jan, povzeto po https://github.com/jurem/SicTools
  */
 public class Loader {
 
