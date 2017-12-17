@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
  */
 public class Machine {
 
+    public SimForm refreshingForm = null;
+
     Register A, X, L, B, S, T, F, SW;
     PCRegister PC;
     Register[] indexReg;
@@ -19,11 +21,8 @@ public class Machine {
 
     public Machine() {
         resetRegisters();
-        indexReg = new Register[]{A, X, L, B, S, T, F};
-
         MAX_ADDRESS = (int) Math.pow(2, 15);
         resetMemory();
-
         dev = new Device[256];
         dev[0] = new InputDevice(System.in);
         dev[1] = new OutputDevice(System.out);
@@ -38,9 +37,10 @@ public class Machine {
         B = new Register(0);
         S = new Register(0);
         T = new Register(0);
-        F = new Register(0.0);
+        F = new Register((double) 0.0);
         PC = new PCRegister(0);
         SW = new SWRegister(0);
+        indexReg = new Register[]{A, X, L, B, S, T, F};
     }
 
     public void resetMemory() {
@@ -99,7 +99,8 @@ public class Machine {
         Long rate = (long) Math.pow(10, 9) / mClockSpeed;
         System.out.println("Clock time = " + rate);
     }
-    public int getSpeed(){
+
+    public int getSpeed() {
         return mClockSpeed;
     }
 
@@ -114,17 +115,26 @@ public class Machine {
 
     public void start(final int n) {
         mKeepRunning = true;
+        final int mEndStep = mStep+n;
         Thread th = new Thread("Sic/XE simulation") {
             public void run() {
-                for (; mStep != mStep + n && mKeepRunning; mStep++) {
-                    Long rate = (long) Math.pow(10, 9) / mClockSpeed;
+                for (; (mStep != mEndStep) && mKeepRunning; mStep++) {
                     Long cStart = System.nanoTime();
-                    execute();
+                    Long rate = (long) Math.pow(10, 9) / mClockSpeed;
+                    try {
+                        execute();
+                        if (refreshingForm != null) {
+                            refreshingForm.refresh();
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e);
+                    }
+
                     Long cEnd = System.nanoTime();
-                    Long toWait = rate - (cEnd - cStart) / 1000000;
+                    Long toWait = (rate - (cEnd - cStart)) / 1000000;
                     toWait = toWait < 0 ? 0 : toWait;
                     try {
-                        Thread.sleep(toWait);
+                        Thread.currentThread().sleep(toWait);
                     } catch (Exception e) {
                         System.out.println(e);
                     }
@@ -147,7 +157,7 @@ public class Machine {
         if (execF2(opcode, operand)) {
             return;
         }
-        int op = opcode >> 2;
+        int op = opcode & 0xFC;
         int n = (opcode >> 1) & 1;
         int i = opcode & 1;
         int ni = (n << 1) + i;
@@ -156,6 +166,7 @@ public class Machine {
             return;
         }
         invalidAddressing();
+        System.out.println(Integer.toHexString(opcode) + " "+ Integer.toHexString(operand));
     }
 
     private boolean execF1(int op) {
@@ -187,7 +198,9 @@ public class Machine {
     }
 
     private boolean execF2(int op, int operand) {
-        byte[] ops = ByteBuffer.allocate(2).putInt(operand).array();
+        byte[] ops = new byte[2];//ByteBuffer.allocate(2).putInt(operand).array();
+        ops[0] = (byte) ((operand >> 4) & 0xF);
+        ops[1] = (byte) (operand & 0xF);
         Register r1, r2;
         int one, two;
         switch (op) {
@@ -456,7 +469,7 @@ public class Machine {
                     break;
                 case Opcode.JGT:
                     if (SW.getValue().intValue() > 0) {
-                        PC.setValue(mem.getWord(address, ni));
+                       PC.setValue(mem.getWord(address, ni));
                     }
                     break;
                 case Opcode.JLT:
