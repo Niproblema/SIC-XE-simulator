@@ -19,18 +19,22 @@ public class Memory {
     }
 
     public int getByte(int addr) {
-        System.out.println("Getting byte: " + field[addr]);
-        return (int) field[addr] & 0xFF;
+        if (addr < 0 || addr >= field.length) {
+            System.out.println("Address out of range!");
+            return -1;
+        }
+        //System.out.println("Getting byte: " + field[addr]);
+        return ((int) field[addr]) & 0xFF;
     }
 
     public int getByte(int addr, int niFlag) {
         switch (niFlag) {
             case 1:
-                return addr & 0xFF;
+                return addr;
             case 2:
-                return getByte(getWord(addr)) & 0xFF;
+                return getByte(getWord(addr));
             case 3:
-                return getByte(addr) & 0xFF;
+                return getByte(addr);
             default:
                 System.out.println("Error parsing ni in memory");
                 return -1;
@@ -43,7 +47,7 @@ public class Memory {
             return;
         }
         field[addr] = (byte) (val & 0xFF);
-        System.out.println("Setting byte: " + Integer.toHexString((byte) val));
+        //System.out.println("Setting byte: " + Integer.toHexString((byte) val));
     }
 
     public void setByte(int addr, int value, int niFlag) {
@@ -64,10 +68,11 @@ public class Memory {
     }
 
     public int getWord(int addr) {
-        byte[] temp = new byte[]{field[addr + 2], field[addr + 1], field[addr]};
-        ByteBuffer wrap = ByteBuffer.wrap(temp);
-        System.out.println("Getting word: " + wrap.getInt());
-        return wrap.getInt();
+        if (addr < 0 || addr >= field.length) {
+            System.out.println("Address out of range!");
+            return -1;
+        }        
+        return (((int)field[addr] & 0xFF)<<16) |((((int)field[addr+1]) & 0xFF)<<8)| (((int) field[addr+2]) & 0xFF);
     }
 
     public int getWord(int addr, int niFlag) {
@@ -90,11 +95,11 @@ public class Memory {
             System.out.println("Address out of range!");
             return;
         }
-        byte[] inp = ByteBuffer.allocate(3).putInt(value).array();
-        field[addr] = inp[0];
-        field[addr + 1] = inp[1];
-        field[addr + 2] = inp[2];
-        System.out.println("Setting word: " + inp.toString()); //https://stackoverflow.com/questions/31750160/get-unsigned-integer-from-byte-array-in-java
+
+        setByte(addr, value >> 16);
+        setByte(addr + 1, (value & 0x00FF00) >> 8);
+        setByte(addr + 2, (value & 0x0000FF ));
+        //System.out.println("Setting word: " + Integer.toString(value)); //https://stackoverflow.com/questions/31750160/get-unsigned-integer-from-byte-array-in-java
     }
 
     public void setWord(int addr, int value, int niFlag) {
